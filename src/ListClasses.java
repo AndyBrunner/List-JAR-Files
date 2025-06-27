@@ -37,7 +37,7 @@ public class ListClasses {
 		
 		// Process command line arguments
 		if (args.length == 0) {
-			System.out.println("Usage: " + PROGRAM_NAME + " [-cp] [-d] [-s] [-h] [-v] jarfile ...");
+			System.out.println("Usage: " + PROGRAM_NAME + " [-cp] [-d] [-s] [-h] [-v] jarfile...");
 			return;
 		}
 		
