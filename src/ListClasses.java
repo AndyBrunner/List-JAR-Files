@@ -1,3 +1,5 @@
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -18,7 +20,7 @@ public class ListClasses {
 
 	// Constants
 	static final String PROGRAM_NAME		= "ListClasses";
-	static final String PROGRAM_VERSION		= "2025.06.27";
+	static final String PROGRAM_VERSION		= "2025.06.28";
 	static final int	MAX_CLASS_NAME_SIZE	= 50;
 
 	/**
@@ -30,6 +32,7 @@ public class ListClasses {
 		boolean				argSearchClassPath	= false;
 		boolean 			argFindDuplicates 	= false;
 		boolean 			argSortResult	 	= false;
+		boolean 			argAbsolutePath	 	= false;
 		boolean				argVersion			= false;
 		boolean				argHelp				= false;
 		
@@ -37,7 +40,7 @@ public class ListClasses {
 		
 		// Process command line arguments
 		if (args.length == 0) {
-			System.out.println("Usage: " + PROGRAM_NAME + " [-cp] [-d] [-s] [-h] [-v] jarfile...");
+			System.out.println("Usage: " + PROGRAM_NAME + " [-cp] [-d] [-s] [-a] [-h] [-v] jarfile...");
 			return;
 		}
 		
@@ -71,6 +74,14 @@ public class ListClasses {
 					argSearchClassPath = true;
 					break;
 				}
+				case "-a": {
+					if (argAbsolutePath) {
+						System.err.println("Error: Multiple -a arguments specified");
+						System.exit(1);
+					}
+					argAbsolutePath = true;
+					break;
+				}
 				case "-d": {
 					if (argFindDuplicates) {
 						System.err.println("Error: Multiple -d arguments specified");
@@ -96,11 +107,12 @@ public class ListClasses {
 
 		// Process -h command
 		if (argHelp) {
-			System.out.println("Usage:\n " + PROGRAM_NAME + " [-cp] [-d] [-s] [-v] [-h] jarfile ...");
+			System.out.println("Usage:\n " + PROGRAM_NAME + " [-cp] [-d] [-s] [-a] [-v] [-h] jarfile ...");
 			System.out.println("");
 			System.out.println("Options:\n -cp Include all JAR files found in the current Java class path");
 			System.out.println(" -d  List only duplicate class names");
 			System.out.println(" -s  Sort output by the Java class name");
+			System.out.println(" -a  Show absolute path of JAR files");
 			System.out.println(" -v  Show program version information");
 			System.out.println(" -h  Show this help page");
 			return;
@@ -159,6 +171,10 @@ public class ListClasses {
 	                    	.append(dateTimeISO.substring(0, dateTimeISO.length() - 4));
 
 	                    // File name
+	                    if (argAbsolutePath) {
+	                    	fileName = Paths.get(fileName).toRealPath().toString();
+	                    }
+	                    
 	                    outputLine
 	                    	.append(' ')
 	                    	.append(fileName);
