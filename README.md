@@ -25,6 +25,39 @@ jarFile One or more JAR files or directories
 -h Show help page
 ```
 
+## Example Output
+
+```text
+ch.k43.util.K                                                             45795 2025-06-05T16:56:20 ../lib/ch.k43.util.jar
+ch.k43.util.KDB                                                           19731 2025-06-05T16:56:20 ../lib/ch.k43.util.jar
+ch.k43.util.KFile                                                          7334 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KHTTPClient                                                   10570 2025-06-05T16:56:20 ../lib/ch.k43.util.jar
+ch.k43.util.KHTTPServerThread                                             11506 2025-06-05T16:56:20 ../lib/ch.k43.util.jar
+ch.k43.util.KHTTPServerThreadSample                                         577 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KHelloWorld                                                    1451 2025-06-05T16:56:20 ../lib/ch.k43.util.jar
+ch.k43.util.KLocalData                                                      601 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KLog                                                          13270 2025-06-05T16:56:20 ../lib/ch.k43.util.jar
+ch.k43.util.KLogCSVFormatter                                               3453 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KLogJDBCHandler                                                6539 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KLogJSONFormatter                                              3276 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KLogLineFormatter                                              2518 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KLogSMTPHandler                                                6549 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KLogSMTPHandlerThread                                          2210 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KLogXMLFormatter                                               3228 2025-06-05T16:56:20 ../lib/ch.k43.util.jar
+ch.k43.util.KLogYAMLFormatter                                              2607 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KPasswordVault                                                 6079 2025-06-05T14:16:24 ../lib/ch.k43.util.jar
+ch.k43.util.KSMTPMailer$1                                                   824 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KSMTPMailer                                                   12464 2025-06-05T16:56:20 ../lib/ch.k43.util.jar
+ch.k43.util.KSocketClient                                                 10492 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KSocketServer                                                  7569 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KSocketServerListener                                          5791 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KSocketServerThread                                            7238 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KSocketServerThreadSample                                      1501 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KThread                                                        2096 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.KTimer                                                         1307 2025-06-05T14:14:44 ../lib/ch.k43.util.jar
+ch.k43.util.package-info                                                    117 2025-06-05T15:05:34 ../lib/ch.k43.util.jar
+```
+
 ## Prerequisites
 
 - Any Java JRE (Java 8+)
@@ -32,8 +65,9 @@ jarFile One or more JAR files or directories
 
 ## Notes
 
-- The required ch.k43.util.jar file must be found in the current classpath or specified at runtime.
+- The required ch.k43.util.jar file must be found in the current class path or specified at runtime.
 - To enable debugging, edit and place the KLog.properties file in the current directory, see [Java Utility Package](https://java-util.k43.ch)
+
 
 ## Examples
 
