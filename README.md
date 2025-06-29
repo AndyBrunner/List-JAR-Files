@@ -1,14 +1,14 @@
 # ListClasses - A command-line tool to view content of Java JAR files
 
-A simple and powerful command-line tool to list Java class names or find duplicates in JAR files.
+A simple  command-line tool to list - or find duplicate - Java class names in JAR files.
 
 
 ## Features
 
-- List content of JAR files (class name, size, creation time and JAR file name)
-- Include multiple JAR files from command line or all files from the current Java class path
-- Show duplicate classes for possible conflicts
-- Sort output by class name
+- List the contents of JAR files (class name, size, creation time, and JAR file name).
+- Include multiple JAR files from the command line or all files from the current Java classpath.
+- Show duplicate classes to identify potential conflicts.
+- Sort the output by class name.
 
 ## Syntax
 
@@ -65,13 +65,13 @@ ch.k43.util.package-info                                                    117 
 
 ## Notes
 
-- The required ch.k43.util.jar file must be found in the current class path or specified at runtime.
-- To enable debugging, edit and place the KLog.properties file in the current directory, see [Java Utility Package](https://java-util.k43.ch)
+- The required ch.k43.util.jar file must be present in the current classpath at runtime.
+- To enable debugging mode, edit and place the KLog.properties file in the current directory. See [Java Utility Package](https://java-util.k43.ch)
 
 
 ## Examples
 
-Show all duplicate classes from all JAR files in the current class path and sort them alphabetically:
+Show all duplicate classes from all JAR files in the current classpath and sort them alphabetically:
 
 ```bash
 ListClasses -cp -d -s
@@ -88,3 +88,10 @@ Search all JAR files in current class path and show only the classes matching "m
 ```bash
 ListClasses -cp -f"mail."
 ```
+
+## History
+
+### 2025.06.29
+
+- First public release
+ 
