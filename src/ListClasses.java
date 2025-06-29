@@ -1,4 +1,4 @@
-import java.nio.file.Path;
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -6,100 +6,234 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 
 import ch.k43.util.K;
 import ch.k43.util.KLog;
 
 /**
- * List class names of JAR file(s).
+ * List class names or find duplicates in JAR files.
  */
 public class ListClasses {
 
 	// Constants
 	static final String PROGRAM_NAME		= "ListClasses";
-	static final String PROGRAM_VERSION		= "2025.06.28";
-	static final int	MAX_CLASS_NAME_SIZE	= 50;
+	static final String PROGRAM_VERSION		= "2025.06.29";
+	static final int	MAX_CLASS_NAME_SIZE	= 70;
 
+	/**
+	 * Return list of jar files found in the Java class path.
+	 * 
+	 * @return	List of jar files
+	 */
+	static void addClassPathJARFiles(ArrayList<String> argJARFiles) {
+		
+        String	classpath = System.getProperty("java.class.path");
+        int		jarFileCount = argJARFiles.size();
+        
+        KLog.debug("Searching class path {}", classpath);
+        
+        // Split the class-path using the appropriate path separator
+        String[] paths = classpath.split(K.PATH_SEPARATOR);
+        
+        for (String path : paths) {
+			addJARFiles(path, argJARFiles);
+        }
+        
+        KLog.debug("{} JAR files added from class path", argJARFiles.size() - jarFileCount);
+	}
+	
+	static void addJARFiles(String argFileOrDirectory, ArrayList<String> argJARFiles) {
+		
+        File	fileOrDirectory = new File(argFileOrDirectory);
+        
+        // Check file or directory exists
+        if (!fileOrDirectory.exists()) {
+        	logError("File or directory {} does not exist", fileOrDirectory.getName());
+        }
+
+        // Check if passed name is a file and has JAR extension
+        if (fileOrDirectory.isFile()) {
+        	if (fileOrDirectory.getName().toLowerCase().endsWith(".jar")) {
+        		argJARFiles.add(fileOrDirectory.getPath());
+            	KLog.debug("Added JAR file {} to be searched", fileOrDirectory.getName());
+        	} else {
+            	KLog.debug("Skipping non-JAR file {}", fileOrDirectory.getName());
+        		return;
+        	}
+        }
+
+        // Search directory for JAR files
+        File[] files = fileOrDirectory.listFiles();
+
+        if ((files != null) && (files.length > 0)) {
+           	for (File file : files) {
+           		if (file.isFile() && (file.getName().toLowerCase().endsWith(".jar"))) {
+           			argJARFiles.add(file.getPath());
+                	KLog.debug("Added JAR file {} to be searched", file.getPath());
+           		}
+           	}
+        }
+	}
+	
+	/**
+	 * Return list with duplicate class names.
+	 *  
+	 * @param	argList	List of entries with class names
+	 * @return	List of all duplicate items
+	 */
+	static ArrayList<String> getDuplicates(ArrayList<String> argList) {
+
+        Set<String>	copiedSet		= new HashSet<>();
+        Set<String>	duplicateSet	= new HashSet<>();
+
+        // Step 1: Find all duplicates
+        KLog.debug("Analyzing {} classes for duplicate class names", argList.size());
+        
+        for (String item : argList) {
+        	
+        	String className = item.substring(0, MAX_CLASS_NAME_SIZE);
+        	
+        	// Add item to the list of duplicates if already processed
+            if (!copiedSet.add(className)) {
+            	duplicateSet.add(className);
+            }
+        }
+		
+        // Step 2: Create new list with all duplicates
+        ArrayList<String> duplicates = new ArrayList<>();
+        
+        for (String item : argList) {
+        	
+        	String className = item.substring(0, MAX_CLASS_NAME_SIZE);
+        	
+        	if (duplicateSet.contains(className)) {
+            	duplicates.add(item);
+        	}
+        }
+
+        return duplicates;
+	}
+	 
+	/**
+	 * Write error to standard output and terminate.
+	 * 
+	 * @param argMessage	Message to be written
+	 * @param argParameters	Replace {} parameters
+	 */
+	static void logError(String argMessage, Object... argParameters) {
+		System.err.println(K.replaceParams(argMessage, argParameters));
+		System.exit(1);
+	}
+	
+	/**
+	 * Write message to standard output.
+	 * 
+	 * @param argMessage	Message to be written
+	 * @param argParameters	Replace {} parameters
+	 */
+	static void logOut(String argMessage, Object... argParameters) {
+		System.out.println(K.replaceParams(argMessage, argParameters));
+	}
+	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
-        ArrayList<String>	argJARFiles			= new ArrayList<>();
-		boolean				argSearchClassPath	= false;
-		boolean 			argFindDuplicates 	= false;
-		boolean 			argSortResult	 	= false;
-		boolean 			argAbsolutePath	 	= false;
-		boolean				argVersion			= false;
-		boolean				argHelp				= false;
+        ArrayList<String>	argJARFiles				= new ArrayList<>();
+    	Pattern				argFilterRegExPattern	= null;
+        String				argFilterRegEx			= null;
+		boolean				argSearchClassPath		= false;
+		boolean 			argFindDuplicates 		= false;
+		boolean 			argSortResult	 		= false;
+		boolean 			argAbsolutePath		 	= false;
+		boolean				argVersion				= false;
+		boolean				argHelp					= false;
+		boolean				argFilter				= false;
 		
 		KLog.info("{} {} started", PROGRAM_NAME, PROGRAM_VERSION);
 		
 		// Process command line arguments
 		if (args.length == 0) {
-			System.out.println("Usage: " + PROGRAM_NAME + " [-cp] [-d] [-s] [-a] [-h] [-v] jarfile...");
-			return;
+			logError("Usage: {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [jarfile...]", PROGRAM_NAME);
 		}
+
+		KLog.debug("Program arguments: {}", String.join(" ", args));
 		
 		for (String arg : args) {
+			
+			// Pre-process -f parameter
+			if (arg.startsWith("-f")) {
+				
+				if (arg.length() < 3) {
+					logError("Error: -f argument must be followed by a RegEx expression");
+				}
+				
+				argFilterRegEx = arg.substring(2);
+				arg = "-f";
+			}
 			
 			switch (arg) {
 				case "-h": {
 					if (argHelp) {
-						System.err.println("Error: Multiple -h arguments specified");
-						System.exit(1);
+						logError("Error: Multiple -h arguments specified");
 					}
 					argHelp = true;
 					break;
 				}
 				case "-v": {
 					if (argVersion) {
-						System.err.println("Error: Multiple -v arguments specified");
-						System.exit(1);
+						logError("Error: Multiple -v arguments specified");
 					}
 					argVersion = true;
 					break;
 				}
 				case "-cp": {
 					if (argSearchClassPath) {
-						System.err.println("Error: Multiple -cp arguments specified");
-						System.exit(1);
+						logError("Error: Multiple -cp arguments specified");
 					}
-					
-					argJARFiles.addAll(getClassPathJARFiles());
-					
+					addClassPathJARFiles(argJARFiles);
 					argSearchClassPath = true;
 					break;
 				}
 				case "-a": {
 					if (argAbsolutePath) {
-						System.err.println("Error: Multiple -a arguments specified");
-						System.exit(1);
+						logError("Error: Multiple -a arguments specified");
 					}
 					argAbsolutePath = true;
 					break;
 				}
 				case "-d": {
 					if (argFindDuplicates) {
-						System.err.println("Error: Multiple -d arguments specified");
-						System.exit(1);
+						logError("Error: Multiple -d arguments specified");
 					}
 					argFindDuplicates = true;
 					break;
 				}
+				case "-f": {
+					if (argFilter) {
+						logError("Error: Multiple -f arguments specified");
+					}
+					argFilter = true;
+					break;
+				}
 				case "-s": {
 					if (argSortResult) {
-						System.err.println("Error: Multiple -s arguments specified");
-						System.exit(1);
+						logError("Error: Multiple -s arguments specified");
 					}
 					argSortResult = true;
 					break;
 				}
 				default: {
-					argJARFiles.add(arg);
+					if (arg.startsWith("-")) {
+						logError("Error: Option " + arg + " unrecognized");
+					}
+					addJARFiles(arg, argJARFiles);
 					break;
 				}
 			}
@@ -107,27 +241,30 @@ public class ListClasses {
 
 		// Process -h command
 		if (argHelp) {
-			System.out.println("Usage:\n " + PROGRAM_NAME + " [-cp] [-d] [-s] [-a] [-v] [-h] jarfile ...");
-			System.out.println("");
-			System.out.println("Options:\n -cp Include all JAR files found in the current Java class path");
-			System.out.println(" -d  List only duplicate class names");
-			System.out.println(" -s  Sort output by the Java class name");
-			System.out.println(" -a  Show absolute path of JAR files");
-			System.out.println(" -v  Show program version information");
-			System.out.println(" -h  Show this help page");
+			logOut("Syntax:");
+			logOut(" {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [jarfile...]", PROGRAM_NAME);
+			logOut("");
+			logOut("Parameters:");
+			logOut(" jarFile One or more JAR files or directories");
+			logOut(" -cp     Include JAR files found in the current Java class path");
+			logOut(" -d      List only duplicate class names");
+			logOut(" -s      Sort output by the Java class name");
+			logOut(" -a      Show absolute path of JAR files");
+			logOut(" -f      RexEx class name filter, e.g. -f\"ch.k43.util\"");
+			logOut(" -v      Show program version information");
+			logOut(" -h      Show help page");
 			return;
 		}
 		
 		// Process -v command
 		if (argVersion) {
-			System.out.println(PROGRAM_NAME + " Version " + PROGRAM_VERSION);
+			logOut("{} Version {}", PROGRAM_NAME, PROGRAM_VERSION);
 			return;
 		}
 		
 		// Check if any JAR file to be processed
 		if (argJARFiles.isEmpty()) {
-			System.err.println("Error: No JAR file given");
-			System.exit(1);	
+			logError("Error: No JAR file found to be processed");
 		}
 		
 		// Get all class files from all specified JAR files
@@ -136,6 +273,8 @@ public class ListClasses {
 		for (String fileName : argJARFiles) {
 			
 			KLog.debug("Reading classes from {}", fileName);
+			
+			int jarFileCount = 0;
 			
 	        try (JarFile jarFile = new JarFile(fileName)) {
 	            Enumeration<JarEntry> entries = jarFile.entries();
@@ -181,13 +320,35 @@ public class ListClasses {
 	                    
 	                    // Add it to array
 	                    classFiles.add(outputLine.toString());
+	                    jarFileCount++;
 	                }
 	            }
+                
+                KLog.debug("{} classes read from file {}", jarFileCount, fileName);
+                
 	        } catch (Exception e) {
-	            System.err.println("Error: Unable to read JAR file " + fileName + ": " + e.toString());
-				System.exit(1);
+	            logError("Error: Unable to read JAR file {}: {}", fileName, e.toString());
 	        }
+		}
+		
+		// Apply RegEx filter by class name
+		if (argFilter) {
 			
+			argFilterRegExPattern		= Pattern.compile(argFilterRegEx);
+	        Iterator<String> iterator	= classFiles.iterator();
+	        int	listCounter				= 0;
+	        
+	        while (iterator.hasNext()) {
+	        	
+	            String className = iterator.next().substring(0, MAX_CLASS_NAME_SIZE).trim();
+	            
+	            if (!argFilterRegExPattern.matcher(className).find()) {
+	                iterator.remove();
+	                listCounter++;
+	            }
+	        }
+	        
+	        KLog.debug("RexEx class name filter removed {} items", listCounter);
 		}
 		
 		// Find duplicates
@@ -196,88 +357,27 @@ public class ListClasses {
 			classFiles = getDuplicates(classFiles);
 
 			if (classFiles.isEmpty()) {
-	            System.out.println("No duplicate class name found");
-				System.exit(0);
+	            logError("No duplicate class name found");
+			} else {
+	            KLog.debug("{} duplicates found", classFiles.size());
 			}
 		}
 
 		// Sort the class names
 		if (argSortResult) {
+            KLog.debug("Sorting the class names");
 			Collections.sort(classFiles);
 		}
 		
 		// List class names
-		for (String entry : classFiles) {
-			System.out.println(entry);
+		if (classFiles.isEmpty()) {
+			logOut("No matching classes found");
+		} else {
+			for (String entry : classFiles) {
+				logOut(entry);
+			}
 		}
 		
 		KLog.info("{} ended", PROGRAM_NAME);
-		
-	}
-	
-	/**
-	 * Return list of jar files found in the Java class path.
-	 * 
-	 * @return	List of jar files
-	 */
-	static ArrayList<String> getClassPathJARFiles() {
-		
-        String classpath = System.getProperty("java.class.path");
-
-        KLog.debug("Searching class path {}", classpath);
-        
-        // Split the class-path using the appropriate path separator
-        String[] paths = classpath.split(K.PATH_SEPARATOR);
-
-        ArrayList<String> fileList = new ArrayList<>();
-        
-        for (String path : paths) {
-            if (path.toLowerCase().endsWith(".jar")) {
-            	fileList.add(path);
-            }
-        }
-        
-        KLog.debug("Found {} JAR files in classpath", fileList.size());
-        
-        return fileList;
-	}
-	
-	/**
-	 * Return list with duplicate class names.
-	 *  
-	 * @param	argList	List of entries with class names
-	 * @return	List of all duplicate items
-	 */
-	static ArrayList<String> getDuplicates(ArrayList<String> argList) {
-
-        Set<String>	copiedSet		= new HashSet<>();
-        Set<String>	duplicateSet	= new HashSet<>();
-
-        // Step 1: Find all duplicates
-        for (String item : argList) {
-        	
-        	String className = item.substring(0, MAX_CLASS_NAME_SIZE);
-        	
-        	// Add item to the list of duplicates if already processed
-            if (!copiedSet.add(className)) {
-            	duplicateSet.add(className);
-            }
-        }
-		
-        // Step 2: Create new list with all duplicates
-        ArrayList<String> duplicates = new ArrayList<>();
-        
-        for (String item : argList) {
-        	
-        	String className = item.substring(0, MAX_CLASS_NAME_SIZE);
-        	
-        	if (duplicateSet.contains(className)) {
-            	duplicates.add(item);
-        	}
-        }
-        
-        KLog.debug("Found {} duplicate class names", duplicateSet.size());
-        
-        return duplicates;
 	}
 }
