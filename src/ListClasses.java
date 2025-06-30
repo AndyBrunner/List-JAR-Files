@@ -24,14 +24,15 @@ import ch.k43.util.KTimer;
 public class ListClasses {
 
 	// Constants
-	static final String PROGRAM_NAME		= "ListClasses";
-	static final String PROGRAM_VERSION		= "2025.06.30";
-	static final KTimer	START_TIME			= new KTimer();
-	static final int	MAX_CLASS_NAME_SIZE	= 70;
+	static final String PROGRAM_NAME			= "ListClasses";
+	static final String PROGRAM_VERSION			= "2025.06.30";
+	static final KTimer	START_TIME				= new KTimer();
+	static final int	MAX_CLASS_NAME_SIZE		= 70;
 
 	/**
 	 * Return list of jar files found in the Java classpath.
-	 * 
+	 *
+	 * @param argJARFiles			Array with class names
 	 * @return	List of jar files
 	 */
 	static void addClassPathJARFiles(ArrayList<String> argJARFiles) {
@@ -51,6 +52,12 @@ public class ListClasses {
         KLog.debug("{} JAR files found in classpath", argJARFiles.size() - jarFileCount);
 	}
 	
+	/**
+	 * Add JAR file or all JAR file in directory to array.
+	 * 
+	 * @param argFileOrDirectory	File or directory to be checked
+	 * @param argJARFiles			Array with class names
+	 */
 	static void addJARFiles(String argFileOrDirectory, ArrayList<String> argJARFiles) {
 		
         File fileOrDirectory = new File(argFileOrDirectory);
@@ -169,7 +176,7 @@ public class ListClasses {
 		// Process command line arguments
 		//
 		if (args.length == 0) {
-			logError("Usage: {} [-c] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
+			logError("Usage: {} [-c] [-d] [-s] [-a] [-fxxx] [-v] [-h] [file...]", PROGRAM_NAME);
 		}
 
 		KLog.debug("Program arguments: {}", String.join(" ", args));
@@ -253,7 +260,7 @@ public class ListClasses {
 		//
 		if (argHelp) {
 			logOut("Syntax:");
-			logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
+			logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-v] [-h] [file...]", PROGRAM_NAME);
 			logOut("");
 			logOut("Parameters:");
 			logOut(" file  One or more JAR files or directories");

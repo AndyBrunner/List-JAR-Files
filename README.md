@@ -71,12 +71,12 @@ ch.k43.util.package-info                                                    117 
 ## Prerequisites
 
 - Any Java JRE (Java 8+)
-- ch.k43.util.jar package
+- ch.k43.util.jar package (Download from [Java Utility Package](https://java-util.k43.ch/downloads/package-ch-k43-util))
 
 ## Notes
 
 - The required ch.k43.util.jar file must be present in the current classpath at runtime.
-- To enable debugging mode, edit and place the KLog.properties file in the current directory. See [Java Utility Package](https://java-util.k43.ch)
+- To enable debugging mode, edit and place the KLog.properties file in the current directory (See Logging in [Java Utility Package](https://java-util.k43.ch/examples/logging))
 
 
 ## Examples
