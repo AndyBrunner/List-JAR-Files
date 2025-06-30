@@ -26,7 +26,7 @@ public class ListClasses {
 	static final int	MAX_CLASS_NAME_SIZE	= 70;
 
 	/**
-	 * Return list of jar files found in the Java class path.
+	 * Return list of jar files found in the Java classpath.
 	 * 
 	 * @return	List of jar files
 	 */
@@ -35,7 +35,7 @@ public class ListClasses {
         String	classpath = System.getProperty("java.class.path");
         int		jarFileCount = argJARFiles.size();
         
-        KLog.debug("Searching class path {}", classpath);
+        KLog.debug("Searching classpath {}", classpath);
         
         // Split the class-path using the appropriate path separator
         String[] paths = classpath.split(K.PATH_SEPARATOR);
@@ -44,7 +44,7 @@ public class ListClasses {
 			addJARFiles(path, argJARFiles);
         }
         
-        KLog.debug("{} JAR files added from class path", argJARFiles.size() - jarFileCount);
+        KLog.debug("{} JAR files added from classpath", argJARFiles.size() - jarFileCount);
 	}
 	
 	static void addJARFiles(String argFileOrDirectory, ArrayList<String> argJARFiles) {
@@ -160,7 +160,7 @@ public class ListClasses {
 		
 		// Process command line arguments
 		if (args.length == 0) {
-			logError("Usage: {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [jarfile...]", PROGRAM_NAME);
+			logError("Usage: {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
 		}
 
 		KLog.debug("Program arguments: {}", String.join(" ", args));
@@ -242,17 +242,17 @@ public class ListClasses {
 		// Process -h command
 		if (argHelp) {
 			logOut("Syntax:");
-			logOut(" {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [jarfile...]", PROGRAM_NAME);
+			logOut(" {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
 			logOut("");
 			logOut("Parameters:");
-			logOut(" jarFile One or more JAR files or directories");
-			logOut(" -cp     Include JAR files found in the current Java class path");
-			logOut(" -d      List only duplicate class names");
-			logOut(" -s      Sort output by the Java class name");
-			logOut(" -a      Show absolute path of JAR files");
-			logOut(" -f      RexEx class name filter, e.g. -f\"ch.k43.util\"");
-			logOut(" -v      Show program version information");
-			logOut(" -h      Show help page");
+			logOut(" file  One or more JAR files or directories");
+			logOut(" -cp   Include JAR files found in the current Java classpath");
+			logOut(" -d    List only duplicate class names");
+			logOut(" -s    Sort output by the Java class name");
+			logOut(" -a    Show absolute path of JAR files");
+			logOut(" -f    RexEx class name filter, e.g. -f\"ch.k43.util\"");
+			logOut(" -v    Show program version information");
+			logOut(" -h    Show help page");
 			return;
 		}
 		
