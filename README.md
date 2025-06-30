@@ -84,19 +84,19 @@ ch.k43.util.package-info                                                    117 
 Show all duplicate classes from all JAR files in the current classpath and sort them alphabetically:
 
 ```
-ListClasses -c -d -s
+java ListClasses -c -d -s
 ```
 
 Show all classes found in file1.jar and file2.jar plus all JAR files in dir1:
 
 ```
-ListClasses file1.jar file2.jar dir1/
+java ListClasses file1.jar file2.jar dir1/
 ```
 
 Search all JAR files in current classpath and show only the classes matching "mail." in the class name:
 
 ```
-ListClasses -c -f"mail."
+java ListClasses -c -f"mail."
 ```
 
 ## License
