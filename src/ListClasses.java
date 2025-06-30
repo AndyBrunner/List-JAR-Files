@@ -169,7 +169,7 @@ public class ListClasses {
 		// Process command line arguments
 		//
 		if (args.length == 0) {
-			logError("Usage: {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
+			logError("Usage: {} [-c] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
 		}
 
 		KLog.debug("Program arguments: {}", String.join(" ", args));
@@ -202,9 +202,9 @@ public class ListClasses {
 					argVersion = true;
 					break;
 				}
-				case "-cp": {
+				case "-c": {
 					if (argSearchClassPath) {
-						logError("Error: Multiple -cp arguments specified");
+						logError("Error: Multiple -c arguments specified");
 					}
 					addClassPathJARFiles(argJARFiles);
 					argSearchClassPath = true;
@@ -253,11 +253,11 @@ public class ListClasses {
 		//
 		if (argHelp) {
 			logOut("Syntax:");
-			logOut(" {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
+			logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
 			logOut("");
 			logOut("Parameters:");
 			logOut(" file  One or more JAR files or directories");
-			logOut(" -cp   Include JAR files found in the current Java classpath");
+			logOut(" -c    Include JAR files found in the current Java classpath");
 			logOut(" -d    List only duplicate class names");
 			logOut(" -s    Sort output by the Java class name");
 			logOut(" -a    Show absolute path of JAR files");

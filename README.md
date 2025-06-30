@@ -23,10 +23,10 @@ A simple command-line tool to list (or find duplicate) Java class names in JAR f
 ## Syntax
 
 ```
-ListClasses [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]
+ListClasses [-c] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]
 
 file  One or more JAR files or directories
--cp   Include JAR files found in the current Java classpath
+-c    Include JAR files found in the current Java classpath
 -d    List only duplicate class names
 -s    Sort output by the Java class name
 -a    Show absolute path of JAR files
@@ -84,7 +84,7 @@ ch.k43.util.package-info                                                    117 
 Show all duplicate classes from all JAR files in the current classpath and sort them alphabetically:
 
 ```
-ListClasses -cp -d -s
+ListClasses -c -d -s
 ```
 
 Show all classes found in file1.jar and file2.jar plus all JAR files in dir1:
@@ -96,7 +96,7 @@ ListClasses file1.jar file2.jar dir1/
 Search all JAR files in current classpath and show only the classes matching "mail." in the class name:
 
 ```
-ListClasses -cp -f"mail."
+ListClasses -c -f"mail."
 ```
 
 ## License
