@@ -1,5 +1,5 @@
-[Open Source](https://img.shields.io/badge/Open_Source-green)
-[Unlicense](https://img.shields.io/badge/License-Unlicense-blue)]
+[![Open Source](https://img.shields.io/badge/Open_Source-green)]
+[![Unlicense](https://img.shields.io/badge/License-Unlicense-blue)]
 
 # ListClasses - A command-line tool to view content of Java JAR files
 
