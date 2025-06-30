@@ -96,7 +96,7 @@ public class ListClasses {
         Set<String>	copiedSet		= new HashSet<>();
         Set<String>	duplicateSet	= new HashSet<>();
 
-        // Step 1: Find all duplicates
+        // Find all duplicates
         KLog.debug("Analyzing {} classes for duplicate class names", argList.size());
         
         for (String item : argList) {
@@ -109,7 +109,7 @@ public class ListClasses {
             }
         }
 		
-        // Step 2: Create new list with all duplicates
+        // Create new list with all duplicates
         ArrayList<String> duplicates = new ArrayList<>();
         
         for (String item : argList) {
@@ -146,7 +146,9 @@ public class ListClasses {
 	}
 	
 	/**
-	 * @param args
+	 * Main entry point.
+	 * 
+	 * @param args	Command line argument(s)
 	 */
 	public static void main(String[] args) {
 
@@ -346,6 +348,8 @@ public class ListClasses {
 	        }
 		}
 		
+        KLog.debug("Processing {} Java classes", classFiles.size());
+		
 		//
 		// Apply RegEx filter by class name
 		//
@@ -365,7 +369,7 @@ public class ListClasses {
 	            }
 	        }
 	        
-	        KLog.debug("RexEx class name filter removed {} items", listCounter);
+	        KLog.debug("RexEx filter removed {} class names", listCounter);
 		}
 		
 		//
