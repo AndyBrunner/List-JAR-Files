@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import ch.k43.util.K;
 import ch.k43.util.KLog;
+import ch.k43.util.KTimer;
 
 /**
  * List class names or find duplicates in JAR files.
@@ -24,6 +25,7 @@ public class ListClasses {
 	static final String PROGRAM_NAME		= "ListClasses";
 	static final String PROGRAM_VERSION		= "2025.06.29";
 	static final int	MAX_CLASS_NAME_SIZE	= 70;
+	static final KTimer	START_TIME			= new KTimer();
 
 	/**
 	 * Return list of jar files found in the Java classpath.
@@ -44,23 +46,23 @@ public class ListClasses {
 			addJARFiles(path, argJARFiles);
         }
         
-        KLog.debug("{} JAR files added from classpath", argJARFiles.size() - jarFileCount);
+        KLog.debug("{} JAR files found in classpath", argJARFiles.size() - jarFileCount);
 	}
 	
 	static void addJARFiles(String argFileOrDirectory, ArrayList<String> argJARFiles) {
 		
-        File	fileOrDirectory = new File(argFileOrDirectory);
+        File fileOrDirectory = new File(argFileOrDirectory);
         
         // Check file or directory exists
         if (!fileOrDirectory.exists()) {
-        	logError("File or directory {} does not exist", fileOrDirectory.getName());
+        	logError("File {} does not exist", fileOrDirectory.getName());
         }
 
         // Check if passed name is a file and has JAR extension
         if (fileOrDirectory.isFile()) {
         	if (fileOrDirectory.getName().toLowerCase().endsWith(".jar")) {
         		argJARFiles.add(fileOrDirectory.getPath());
-            	KLog.debug("Added JAR file {} to be searched", fileOrDirectory.getName());
+            	KLog.debug("Found JAR file {}", fileOrDirectory.getPath());
         	} else {
             	KLog.debug("Skipping non-JAR file {}", fileOrDirectory.getName());
         		return;
@@ -74,7 +76,7 @@ public class ListClasses {
            	for (File file : files) {
            		if (file.isFile() && (file.getName().toLowerCase().endsWith(".jar"))) {
            			argJARFiles.add(file.getPath());
-                	KLog.debug("Added JAR file {} to be searched", file.getPath());
+                	KLog.debug("Found JAR file {}", file.getPath());
            		}
            	}
         }
@@ -324,7 +326,7 @@ public class ListClasses {
 	                }
 	            }
                 
-                KLog.debug("{} classes read from file {}", jarFileCount, fileName);
+                KLog.debug("{} Java classes read from file {}", jarFileCount, fileName);
                 
 	        } catch (Exception e) {
 	            logError("Error: Unable to read JAR file {}: {}", fileName, e.toString());
@@ -359,7 +361,7 @@ public class ListClasses {
 			if (classFiles.isEmpty()) {
 	            logError("No duplicate class name found");
 			} else {
-	            KLog.debug("{} duplicates found", classFiles.size());
+	            KLog.debug("{} duplicate class names found", classFiles.size());
 			}
 		}
 
@@ -370,6 +372,8 @@ public class ListClasses {
 		}
 		
 		// List class names
+        KLog.debug("Formatting {} Java classes", classFiles.size());
+        
 		if (classFiles.isEmpty()) {
 			logOut("No matching classes found");
 		} else {
@@ -378,6 +382,6 @@ public class ListClasses {
 			}
 		}
 		
-		KLog.info("{} ended", PROGRAM_NAME);
+		KLog.info("{} ended ({} ms)", PROGRAM_NAME, START_TIME.getElapsedMilliseconds());
 	}
 }

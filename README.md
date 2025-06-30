@@ -1,4 +1,5 @@
-[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
+[Open Source](https://img.shields.io/badge/Open_Source-green)
+[Unlicense](https://img.shields.io/badge/License-Unlicense-blue)]
 
 # ListClasses - A command-line tool to view content of Java JAR files
 
