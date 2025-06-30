@@ -1,16 +1,23 @@
-[![Open Source](https://img.shields.io/badge/Open_Source-green)]
-[![Unlicense](https://img.shields.io/badge/License-Unlicense-blue)]
+![Java](https://img.shields.io/badge/Language-Java-blue)
+![Open Source](https://img.shields.io/badge/Code-Open_Source-green)
+![Unlicense](https://img.shields.io/badge/License-Unlicense-green)
+
+![Author](https://img.shields.io/badge/Author-andy.brunner@k43.ch-grey)
+
+---
 
 # ListClasses - A command-line tool to view content of Java JAR files
 
-A simple  command-line tool to list - or find duplicate - Java class names in JAR files.
+A simple command-line tool to list (or find duplicate) Java class names in JAR files.
 
+---
 
 ## Features
 
 - List the contents of JAR files (class name, size, creation time, and JAR file name).
 - Include multiple JAR files from the command line or all files from the current Java classpath.
 - Show duplicate classes to identify potential conflicts.
+- Filter classes by RexEx expression.
 - Sort the output by class name.
 
 ## Syntax
@@ -95,10 +102,3 @@ ListClasses -cp -f"mail."
 ## License
 
 This project is released into the public domain under [The Unlicense](LICENSE).
-
-## History
-
-### 2025.06.29
-
-- First public release
- 

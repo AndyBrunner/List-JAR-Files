@@ -18,14 +18,16 @@ import ch.k43.util.KTimer;
 
 /**
  * List class names or find duplicates in JAR files.
+ * 
+ * @author andy.brunner@k43.ch
  */
 public class ListClasses {
 
 	// Constants
 	static final String PROGRAM_NAME		= "ListClasses";
-	static final String PROGRAM_VERSION		= "2025.06.29";
-	static final int	MAX_CLASS_NAME_SIZE	= 70;
+	static final String PROGRAM_VERSION		= "2025.06.30";
 	static final KTimer	START_TIME			= new KTimer();
+	static final int	MAX_CLASS_NAME_SIZE	= 70;
 
 	/**
 	 * Return list of jar files found in the Java classpath.
@@ -34,12 +36,12 @@ public class ListClasses {
 	 */
 	static void addClassPathJARFiles(ArrayList<String> argJARFiles) {
 		
-        String	classpath = System.getProperty("java.class.path");
-        int		jarFileCount = argJARFiles.size();
+        String	classpath		= System.getProperty("java.class.path", "");
+        int		jarFileCount	= argJARFiles.size();
         
         KLog.debug("Searching classpath {}", classpath);
         
-        // Split the class-path using the appropriate path separator
+        // Split the classpath using the system dependent path separator
         String[] paths = classpath.split(K.PATH_SEPARATOR);
         
         for (String path : paths) {
@@ -63,6 +65,7 @@ public class ListClasses {
         	if (fileOrDirectory.getName().toLowerCase().endsWith(".jar")) {
         		argJARFiles.add(fileOrDirectory.getPath());
             	KLog.debug("Found JAR file {}", fileOrDirectory.getPath());
+            	return;
         	} else {
             	KLog.debug("Skipping non-JAR file {}", fileOrDirectory.getName());
         		return;
@@ -160,7 +163,9 @@ public class ListClasses {
 		
 		KLog.info("{} {} started", PROGRAM_NAME, PROGRAM_VERSION);
 		
+		//
 		// Process command line arguments
+		//
 		if (args.length == 0) {
 			logError("Usage: {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
 		}
@@ -241,7 +246,9 @@ public class ListClasses {
 			}
 		}
 
+		//
 		// Process -h command
+		//
 		if (argHelp) {
 			logOut("Syntax:");
 			logOut(" {} [-cp] [-d] [-s] [-a] [-fxxx] [-h] [-v] [file...]", PROGRAM_NAME);
@@ -258,7 +265,9 @@ public class ListClasses {
 			return;
 		}
 		
+		//
 		// Process -v command
+		//
 		if (argVersion) {
 			logOut("{} Version {}", PROGRAM_NAME, PROGRAM_VERSION);
 			return;
@@ -269,7 +278,9 @@ public class ListClasses {
 			logError("Error: No JAR file found to be processed");
 		}
 		
+		//
 		// Get all class files from all specified JAR files
+		//
 		ArrayList<String> classFiles = new ArrayList<>();
 		
 		for (String fileName : argJARFiles) {
@@ -281,6 +292,8 @@ public class ListClasses {
 	        try (JarFile jarFile = new JarFile(fileName)) {
 	            Enumeration<JarEntry> entries = jarFile.entries();
 
+	            String formatterString = "%-" + MAX_CLASS_NAME_SIZE + 's';
+	            
 	            while (entries.hasMoreElements()) {
 
 	            	JarEntry entry = entries.nextElement();
@@ -292,7 +305,7 @@ public class ListClasses {
 	                	// Java class name: Replace package name delimiter, remove ".class" extension and limit length
 	                	String className = entry.getName().replace('/', '.');
 	                	className = K.truncateMiddle(className.substring(0, className.length() - 6), MAX_CLASS_NAME_SIZE);
-	                	outputLine.append(String.format("%-" + MAX_CLASS_NAME_SIZE + 's', className));
+	                	outputLine.append(String.format(formatterString, className));
 
 	                	// Class size
 	                	outputLine.append(String.format(" %8d", entry.getSize()));
@@ -302,7 +315,7 @@ public class ListClasses {
 	                    
 	                    long time = entry.getTime();
 	                    if (time <= 0) {
-	                        time = System.currentTimeMillis();
+	                    	time = System.currentTimeMillis();
 	                    }
 	                    dateTime.setTime(new Date(time));
 	                    
@@ -333,7 +346,9 @@ public class ListClasses {
 	        }
 		}
 		
+		//
 		// Apply RegEx filter by class name
+		//
 		if (argFilter) {
 			
 			argFilterRegExPattern		= Pattern.compile(argFilterRegEx);
@@ -353,7 +368,9 @@ public class ListClasses {
 	        KLog.debug("RexEx class name filter removed {} items", listCounter);
 		}
 		
+		//
 		// Find duplicates
+		//
 		if (argFindDuplicates) {
 			
 			classFiles = getDuplicates(classFiles);
@@ -365,13 +382,17 @@ public class ListClasses {
 			}
 		}
 
+		//
 		// Sort the class names
+		//
 		if (argSortResult) {
-            KLog.debug("Sorting the class names");
+            KLog.debug("Sorting class names");
 			Collections.sort(classFiles);
 		}
 		
+		//
 		// List class names
+		//
         KLog.debug("Formatting {} Java classes", classFiles.size());
         
 		if (classFiles.isEmpty()) {
