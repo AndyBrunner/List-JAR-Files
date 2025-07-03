@@ -1,4 +1,8 @@
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -6,7 +10,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -25,15 +28,14 @@ public class ListClasses {
 
 	// Constants
 	static final String PROGRAM_NAME			= "ListClasses";
-	static final String PROGRAM_VERSION			= "2025.06.30";
+	static final String PROGRAM_VERSION			= "2025.07.03";
 	static final KTimer	START_TIME				= new KTimer();
 	static final int	MAX_CLASS_NAME_SIZE		= 70;
 
 	/**
 	 * Return list of jar files found in the Java classpath.
 	 *
-	 * @param argJARFiles			Array with class names
-	 * @return	List of jar files
+	 * @param	argJARFiles			Array with class names
 	 */
 	static void addClassPathJARFiles(ArrayList<String> argJARFiles) {
 		
@@ -104,13 +106,13 @@ public class ListClasses {
         Set<String>	duplicateSet	= new HashSet<>();
 
         // Find all duplicates
-        KLog.debug("Analyzing {} classes for duplicate class names", argList.size());
+        KLog.debug("Analyzing {} Java classes for duplicate names", argList.size());
         
         for (String item : argList) {
         	
-        	String className = item.substring(0, MAX_CLASS_NAME_SIZE);
+        	String className = item.split(" ")[0];
         	
-        	// Add item to the list of duplicates if already processed
+        	// Add name to list of duplicates if previously stored in hash set
             if (!copiedSet.add(className)) {
             	duplicateSet.add(className);
             }
@@ -121,8 +123,9 @@ public class ListClasses {
         
         for (String item : argList) {
         	
-        	String className = item.substring(0, MAX_CLASS_NAME_SIZE);
+        	String className = item.split(" ")[0];
         	
+        	// Add name to list if found in list of duplicates
         	if (duplicateSet.contains(className)) {
             	duplicates.add(item);
         	}
@@ -130,7 +133,56 @@ public class ListClasses {
 
         return duplicates;
 	}
-	 
+
+	/**
+	 * Return formatted serialVersionUID field from java class in JAR file.
+	 * 
+	 * @param argJARFile	JAR file name
+	 * @param argClassName	Class name
+	 * 
+	 * @return Formatted field
+	 */
+	static String getUIDFromClassFile(String argJARFile, String argClassName) {
+
+		// Load the class from the JAR file
+		try (URLClassLoader jarClassLoader = new URLClassLoader(new URL[]{ new File(argJARFile).toURI().toURL() }, ListClasses.class.getClassLoader());
+) {
+			Class<?> clazz	= jarClassLoader.loadClass(argClassName.replace("/", ".").replace(".class", ""));
+            
+			// Get serialVersionUID field
+			Field field = clazz.getDeclaredField("serialVersionUID");
+			field.setAccessible(true);
+
+			// Check if field is "Static final long"
+			if (field.getType() != long.class) {
+				return "Not-Long-Type";
+			}
+
+			int fieldModifier = field.getModifiers();
+
+			if (!Modifier.isStatic(fieldModifier)) {
+				return "Not-Static-Modifier";
+			}
+
+			if (!Modifier.isFinal(fieldModifier)) {
+				return "Not-Final-Modifier";
+			}
+
+			// Return long value converted to String
+			return String.format("%d", field.getLong(null));
+
+		} catch (NoSuchFieldException e1) {
+			return "Not-Set";
+		} catch (IllegalAccessException e2) {
+			return "Illegal-Access";
+		} catch (NoClassDefFoundError e3) {
+			return "Not-Std-Class";
+		} catch (Exception e0) {
+			KLog.error("Unable to get SerialVersionUID of class {}: {}", argClassName, e0);
+			return "Exception";
+		}
+	}
+	
 	/**
 	 * Write error to standard output and terminate.
 	 * 
@@ -161,7 +213,6 @@ public class ListClasses {
 
         ArrayList<String>	argJARFiles				= new ArrayList<>();
     	Pattern				argFilterRegExPattern	= null;
-        String				argFilterRegEx			= null;
 		boolean				argSearchClassPath		= false;
 		boolean 			argFindDuplicates 		= false;
 		boolean 			argSortResult	 		= false;
@@ -169,28 +220,28 @@ public class ListClasses {
 		boolean				argVersion				= false;
 		boolean				argHelp					= false;
 		boolean				argFilter				= false;
+		boolean				argSerialVersionUID		= false;
 		
-		KLog.info("{} {} started", PROGRAM_NAME, PROGRAM_VERSION);
-		
+		KLog.info("{} started - Version {}", PROGRAM_NAME, PROGRAM_VERSION);
+				
 		//
 		// Process command line arguments
 		//
 		if (args.length == 0) {
-			logError("Usage: {} [-c] [-d] [-s] [-a] [-fxxx] [-v] [-h] [file...]", PROGRAM_NAME);
+			logError("Usage: {} [-c] [-d] [-s] [-a] [-fxxx] [-u] [-v] [-h] [file...]", PROGRAM_NAME);
+		} else {
+			KLog.info("Command line parameters: {}", String.join(" ", args));
 		}
-
-		KLog.debug("Program arguments: {}", String.join(" ", args));
 		
 		for (String arg : args) {
 			
-			// Pre-process -f parameter
+			// Check filter parameter
 			if (arg.startsWith("-f")) {
 				
 				if (arg.length() < 3) {
 					logError("Error: -f argument must be followed by a RegEx expression");
 				}
-				
-				argFilterRegEx = arg.substring(2);
+				argFilterRegExPattern = Pattern.compile(arg.substring(2));
 				arg = "-f";
 			}
 			
@@ -245,6 +296,14 @@ public class ListClasses {
 					argSortResult = true;
 					break;
 				}
+				case "-u": {
+					if (argSerialVersionUID) {
+						logError("Error: Multiple -u arguments specified");
+					}
+					argSerialVersionUID = true;
+					break;
+				}
+				
 				default: {
 					if (arg.startsWith("-")) {
 						logError("Error: Option " + arg + " unrecognized");
@@ -260,7 +319,7 @@ public class ListClasses {
 		//
 		if (argHelp) {
 			logOut("Syntax:");
-			logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-v] [-h] [file...]", PROGRAM_NAME);
+			logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-u] [-v] [-h] [file...]", PROGRAM_NAME);
 			logOut("");
 			logOut("Parameters:");
 			logOut(" file  One or more JAR files or directories");
@@ -269,6 +328,7 @@ public class ListClasses {
 			logOut(" -s    Sort output by the Java class name");
 			logOut(" -a    Show absolute path of JAR files");
 			logOut(" -f    RexEx class name filter, e.g. -f\"ch.k43.util\"");
+			logOut(" -u    Show serialVersionUID for each class");
 			logOut(" -v    Show program version information");
 			logOut(" -h    Show help page");
 			return;
@@ -290,36 +350,56 @@ public class ListClasses {
 		//
 		// Get all class files from all specified JAR files
 		//
-		ArrayList<String> classFiles = new ArrayList<>();
+		ArrayList<String>	classFiles		= new ArrayList<>();
+		String				formatterString = "%-" + MAX_CLASS_NAME_SIZE + 's';
+        int					skippedEntries	= 0;
 		
 		for (String fileName : argJARFiles) {
 			
-			KLog.debug("Reading classes from {}", fileName);
+			KLog.debug("Reading Java classes from {}", fileName);
 			
 			int jarFileCount = 0;
-			
+
 	        try (JarFile jarFile = new JarFile(fileName)) {
+	        
 	            Enumeration<JarEntry> entries = jarFile.entries();
 
-	            String formatterString = "%-" + MAX_CLASS_NAME_SIZE + 's';
-	            
 	            while (entries.hasMoreElements()) {
 
 	            	JarEntry entry = entries.nextElement();
-
+	            	
 	                if (entry.getName().toLowerCase().endsWith(".class") && !entry.isDirectory()) {
-	                	
-	                	StringBuilder outputLine = new StringBuilder();
-	                	
-	                	// Java class name: Replace package name delimiter, remove ".class" extension and limit length
-	                	String className = entry.getName().replace('/', '.');
-	                	className = K.truncateMiddle(className.substring(0, className.length() - 6), MAX_CLASS_NAME_SIZE);
-	                	outputLine.append(String.format(formatterString, className));
 
-	                	// Class size
-	                	outputLine.append(String.format(" %8d", entry.getSize()));
+	                	StringBuilder outputLine = new StringBuilder();
+
+	                	//
+	                	// Java class name
+	                	//
 	                	
-	                	// Date/Time: Convert to ISO 8601 and remove decimals from seconds
+	                	// Replace package name delimiter and remove ".class" extension
+	                    String className = entry.getName().replace('/', '.').replace(".class", "");
+
+		            	// Check if RexEx filter matches
+		            	if (argFilter && !argFilterRegExPattern.matcher(entry.getName()).find()) {
+		            		skippedEntries++;
+		    	           	continue;
+		    	        }
+	                    
+	                    // Truncate it to maximum size
+	                	outputLine
+	                		.append(String.format(formatterString, K.truncateMiddle(className, MAX_CLASS_NAME_SIZE)));
+
+	                	//
+	                	// Class size
+	                	//
+	                	outputLine
+	                		.append(String.format(" %8d", entry.getSize()));
+	                	
+	                	//
+	                	// Date/Time
+	                	//
+	                	
+	                	// Convert to ISO 8601 and remove decimals from seconds
 	                    Calendar dateTime = Calendar.getInstance();
 	                    
 	                    long time = entry.getTime();
@@ -327,24 +407,34 @@ public class ListClasses {
 	                    	time = System.currentTimeMillis();
 	                    }
 	                    dateTime.setTime(new Date(time));
-	                    
+
 	                    String dateTimeISO = K.getTimeISO8601(dateTime);
+
 	                    outputLine
 	                    	.append(' ')
 	                    	.append(dateTimeISO.substring(0, dateTimeISO.length() - 4));
 
-	                    // File name
-	                    if (argAbsolutePath) {
-	                    	fileName = Paths.get(fileName).toRealPath().toString();
+	                    //
+	                    // Show serialVersionUID
+	                    //
+	                    if (argSerialVersionUID) {
+		                    outputLine
+		                    .append(' ')
+		                    .append(String.format("%20s", getUIDFromClassFile(Paths.get(fileName).toRealPath().toString(), entry.getName())));
 	                    }
 	                    
+	                    //
+	                    // File name
+	                    //
 	                    outputLine
 	                    	.append(' ')
-	                    	.append(fileName);
+	                    	.append(argAbsolutePath ? Paths.get(fileName).toRealPath().toString() : fileName);
 	                    
 	                    // Add it to array
 	                    classFiles.add(outputLine.toString());
 	                    jarFileCount++;
+	                } else {
+	                	KLog.debug("Skipping JAR entry {}", entry.getName());
 	                }
 	            }
                 
@@ -355,29 +445,7 @@ public class ListClasses {
 	        }
 		}
 		
-        KLog.debug("Processing {} Java classes", classFiles.size());
-		
-		//
-		// Apply RegEx filter by class name
-		//
-		if (argFilter) {
-			
-			argFilterRegExPattern		= Pattern.compile(argFilterRegEx);
-	        Iterator<String> iterator	= classFiles.iterator();
-	        int	listCounter				= 0;
-	        
-	        while (iterator.hasNext()) {
-	        	
-	            String className = iterator.next().substring(0, MAX_CLASS_NAME_SIZE).trim();
-	            
-	            if (!argFilterRegExPattern.matcher(className).find()) {
-	                iterator.remove();
-	                listCounter++;
-	            }
-	        }
-	        
-	        KLog.debug("RexEx filter removed {} class names", listCounter);
-		}
+        KLog.debug("Found {} Java classes - Filtered {} classes" , classFiles.size(), skippedEntries);
 		
 		//
 		// Find duplicates
@@ -387,9 +455,9 @@ public class ListClasses {
 			classFiles = getDuplicates(classFiles);
 
 			if (classFiles.isEmpty()) {
-	            logError("No duplicate class name found");
+	            logError("No duplicate Java class name found");
 			} else {
-	            KLog.debug("{} duplicate class names found", classFiles.size());
+	            KLog.debug("{} duplicate Java class names found", classFiles.size());
 			}
 		}
 
@@ -397,23 +465,21 @@ public class ListClasses {
 		// Sort the class names
 		//
 		if (argSortResult) {
-            KLog.debug("Sorting class names");
+            KLog.debug("Sorting Java class names");
 			Collections.sort(classFiles);
 		}
 		
 		//
 		// List class names
 		//
-        KLog.debug("Formatting {} Java classes", classFiles.size());
-        
 		if (classFiles.isEmpty()) {
-			logOut("No matching classes found");
+			logOut("No matching Java classes found");
 		} else {
 			for (String entry : classFiles) {
 				logOut(entry);
 			}
 		}
 		
-		KLog.info("{} ended ({} ms)", PROGRAM_NAME, START_TIME.getElapsedMilliseconds());
+		KLog.info("{} ended (Elapsed time {} ms)", PROGRAM_NAME, START_TIME.getElapsedMilliseconds());
 	}
 }
