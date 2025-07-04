@@ -101,6 +101,41 @@ public class ListClasses {
 	}
 	
 	/**
+	 * Checks if application is running as GraalVM native executable.
+	 */
+	static void checkRunningUnderGraalVM() {
+
+        String vmName		= System.getProperty("java.vm.name", "");
+        String runtimeName	= System.getProperty("java.runtime.name", "");
+
+        if (vmName.contains("GraalVM") || runtimeName.contains("GraalVM")) {
+        	logError("Option -u not supported for GraalVM native executable due to restrictions in support for the Java Reflection API");
+        }
+	}
+
+	/**
+	 * Display program syntax and options.
+	 */
+	static void displayHelp() {
+
+		logOut("Syntax:");
+		logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-u] [-v] [-h] [file...]", PROGRAM_NAME);
+		logOut("");
+		logOut("Options:");
+		logOut(" file  One or more JAR files or directories");
+		logOut(" -c    Include JAR files found in the current Java classpath");
+		logOut(" -d    List only duplicate class names");
+		logOut(" -s    Sort output by the Java class name");
+		logOut(" -a    Show absolute path of JAR files");
+		logOut(" -f    RexEx class name filter, e.g. -f\"ch.k43.util\"");
+		logOut(" -u    Show serialVersionUID for each class");
+		logOut(" -v    Show program version information");
+		logOut(" -h    Show help page");
+		return;
+		
+	}
+	
+	/**
 	 * Return list with duplicate class names.
 	 *  
 	 * @param	argList	List of entries with class names
@@ -188,19 +223,6 @@ public class ListClasses {
 			return "Exception";
 		}
 	}
-
-	/**
-	 * Checks if application is running as GraalVM native executable.
-	 */
-	static void checkRunningUnderGraalVM() {
-
-        String vmName		= System.getProperty("java.vm.name", "");
-        String runtimeName	= System.getProperty("java.runtime.name", "");
-
-        if (vmName.contains("GraalVM") || runtimeName.contains("GraalVM")) {
-        	logError("Option -u not supported for GraalVM native executable due to restrictions in support for the Java Reflection API");
-        }
-	}
 	
 	/**
 	 * Write error to standard output and terminate.
@@ -247,7 +269,8 @@ public class ListClasses {
 		// Process command line arguments
 		//
 		if (args.length == 0) {
-			logError("Usage: {} [-c] [-d] [-s] [-a] [-fxxx] [-u] [-v] [-h] [file...]", PROGRAM_NAME);
+			displayHelp();
+			System.exit(1);
 		} else {
 			KLog.info("Command line arguments: {}", String.join(" ", args));
 		}
@@ -258,7 +281,7 @@ public class ListClasses {
 			if (arg.startsWith("-f")) {
 				
 				if (arg.length() < 3) {
-					logError("Error: -f option must be followed by a RegEx expression");
+					logError("Error: Option -f must be followed by a RegEx expression");
 				}
 				argFilterRegExPattern = Pattern.compile(arg.substring(2));
 				arg = "-f";
@@ -337,19 +360,7 @@ public class ListClasses {
 		// Process -h command
 		//
 		if (argHelp) {
-			logOut("Syntax:");
-			logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-u] [-v] [-h] [file...]", PROGRAM_NAME);
-			logOut("");
-			logOut("Options:");
-			logOut(" file  One or more JAR files or directories");
-			logOut(" -c    Include JAR files found in the current Java classpath");
-			logOut(" -d    List only duplicate class names");
-			logOut(" -s    Sort output by the Java class name");
-			logOut(" -a    Show absolute path of JAR files");
-			logOut(" -f    RexEx class name filter, e.g. -f\"ch.k43.util\"");
-			logOut(" -u    Show serialVersionUID for each class");
-			logOut(" -v    Show program version information");
-			logOut(" -h    Show help page");
+			displayHelp();
 			return;
 		}
 		
@@ -469,7 +480,7 @@ public class ListClasses {
 	        }
 		}
 		
-        KLog.debug("Found {} Java classes - Filtered {} classes" , classFiles.size(), skippedEntries);
+        KLog.debug("Total Java classes {} - Filtered Java classes {}" , classFiles.size(), skippedEntries);
 		
 		//
 		// Find duplicates
