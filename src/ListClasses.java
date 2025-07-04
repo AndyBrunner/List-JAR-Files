@@ -28,7 +28,7 @@ public class ListClasses {
 
 	// Constants
 	static final String PROGRAM_NAME			= "ListClasses";
-	static final String PROGRAM_VERSION			= "2025.07.03";
+	static final String PROGRAM_VERSION			= "2025.07.04";
 	static final KTimer	START_TIME				= new KTimer();
 	static final int	MAX_CLASS_NAME_SIZE		= 70;
 
@@ -39,8 +39,14 @@ public class ListClasses {
 	 */
 	static void addClassPathJARFiles(ArrayList<String> argJARFiles) {
 		
-        String	classpath		= System.getProperty("java.class.path", "");
+        String	classpath		= System.getProperty("java.class.path", "").trim();
         int		jarFileCount	= argJARFiles.size();
+
+        // Return if empty classpath
+        if (K.isEmpty(classpath)) {
+        	KLog.debug("No entries in classpath found");
+        	return;
+        }
         
         KLog.debug("Searching classpath {}", classpath);
         
@@ -145,9 +151,9 @@ public class ListClasses {
 	static String getUIDFromClassFile(String argJARFile, String argClassName) {
 
 		// Load the class from the JAR file
-		try (URLClassLoader jarClassLoader = new URLClassLoader(new URL[]{ new File(argJARFile).toURI().toURL() }, ListClasses.class.getClassLoader());
+		try (URLClassLoader classLoader = new URLClassLoader(new URL[]{ new File(argJARFile).toURI().toURL() },ListClasses.class.getClassLoader());
 ) {
-			Class<?> clazz	= jarClassLoader.loadClass(argClassName.replace("/", ".").replace(".class", ""));
+			Class<?> clazz	= classLoader.loadClass(argClassName.replace("/", ".").replace(".class", ""));
             
 			// Get serialVersionUID field
 			Field field = clazz.getDeclaredField("serialVersionUID");
@@ -182,6 +188,19 @@ public class ListClasses {
 			return "Exception";
 		}
 	}
+
+	/**
+	 * Checks if application is running as GraalVM native executable.
+	 */
+	static void checkRunningUnderGraalVM() {
+
+        String vmName		= System.getProperty("java.vm.name", "");
+        String runtimeName	= System.getProperty("java.runtime.name", "");
+
+        if (vmName.contains("GraalVM") || runtimeName.contains("GraalVM")) {
+        	logError("Option -u not supported for GraalVM native executable due to restrictions in support for the Java Reflection API");
+        }
+	}
 	
 	/**
 	 * Write error to standard output and terminate.
@@ -207,7 +226,7 @@ public class ListClasses {
 	/**
 	 * Main entry point.
 	 * 
-	 * @param args	Command line argument(s)
+	 * @param args	Command line arguments
 	 */
 	public static void main(String[] args) {
 
@@ -230,16 +249,16 @@ public class ListClasses {
 		if (args.length == 0) {
 			logError("Usage: {} [-c] [-d] [-s] [-a] [-fxxx] [-u] [-v] [-h] [file...]", PROGRAM_NAME);
 		} else {
-			KLog.info("Command line parameters: {}", String.join(" ", args));
+			KLog.info("Command line arguments: {}", String.join(" ", args));
 		}
 		
 		for (String arg : args) {
 			
-			// Check filter parameter
+			// Check filter option
 			if (arg.startsWith("-f")) {
 				
 				if (arg.length() < 3) {
-					logError("Error: -f argument must be followed by a RegEx expression");
+					logError("Error: -f option must be followed by a RegEx expression");
 				}
 				argFilterRegExPattern = Pattern.compile(arg.substring(2));
 				arg = "-f";
@@ -248,21 +267,21 @@ public class ListClasses {
 			switch (arg) {
 				case "-h": {
 					if (argHelp) {
-						logError("Error: Multiple -h arguments specified");
+						logError("Error: Multiple -h options specified");
 					}
 					argHelp = true;
 					break;
 				}
 				case "-v": {
 					if (argVersion) {
-						logError("Error: Multiple -v arguments specified");
+						logError("Error: Multiple -v options specified");
 					}
 					argVersion = true;
 					break;
 				}
 				case "-c": {
 					if (argSearchClassPath) {
-						logError("Error: Multiple -c arguments specified");
+						logError("Error: Multiple -c options specified");
 					}
 					addClassPathJARFiles(argJARFiles);
 					argSearchClassPath = true;
@@ -270,35 +289,35 @@ public class ListClasses {
 				}
 				case "-a": {
 					if (argAbsolutePath) {
-						logError("Error: Multiple -a arguments specified");
+						logError("Error: Multiple -a options specified");
 					}
 					argAbsolutePath = true;
 					break;
 				}
 				case "-d": {
 					if (argFindDuplicates) {
-						logError("Error: Multiple -d arguments specified");
+						logError("Error: Multiple -d options specified");
 					}
 					argFindDuplicates = true;
 					break;
 				}
 				case "-f": {
 					if (argFilter) {
-						logError("Error: Multiple -f arguments specified");
+						logError("Error: Multiple -f options specified");
 					}
 					argFilter = true;
 					break;
 				}
 				case "-s": {
 					if (argSortResult) {
-						logError("Error: Multiple -s arguments specified");
+						logError("Error: Multiple -s options specified");
 					}
 					argSortResult = true;
 					break;
 				}
 				case "-u": {
 					if (argSerialVersionUID) {
-						logError("Error: Multiple -u arguments specified");
+						logError("Error: Multiple -u options specified");
 					}
 					argSerialVersionUID = true;
 					break;
@@ -321,7 +340,7 @@ public class ListClasses {
 			logOut("Syntax:");
 			logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-u] [-v] [-h] [file...]", PROGRAM_NAME);
 			logOut("");
-			logOut("Parameters:");
+			logOut("Options:");
 			logOut(" file  One or more JAR files or directories");
 			logOut(" -c    Include JAR files found in the current Java classpath");
 			logOut(" -d    List only duplicate class names");
@@ -341,6 +360,11 @@ public class ListClasses {
 			logOut("{} Version {}", PROGRAM_NAME, PROGRAM_VERSION);
 			return;
 		}
+		
+		//
+		// Check if running as GraalVM native executable
+		//
+		checkRunningUnderGraalVM();
 		
 		// Check if any JAR file to be processed
 		if (argJARFiles.isEmpty()) {
@@ -455,7 +479,7 @@ public class ListClasses {
 			classFiles = getDuplicates(classFiles);
 
 			if (classFiles.isEmpty()) {
-	            logError("No duplicate Java class name found");
+	            logError("No duplicate Java class names found");
 			} else {
 	            KLog.debug("{} duplicate Java class names found", classFiles.size());
 			}
