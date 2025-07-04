@@ -122,7 +122,7 @@ public class ListClasses {
 		logOut(" {} [-c] [-d] [-s] [-a] [-fxxx] [-u] [-v] [-h] [file...]", PROGRAM_NAME);
 		logOut("");
 		logOut("Options:");
-		logOut(" file  One or more JAR files or directories");
+		logOut(" file  JAR file or directory");
 		logOut(" -c    Include JAR files found in the current Java classpath");
 		logOut(" -d    List only duplicate class names");
 		logOut(" -s    Sort output by the Java class name");
@@ -131,7 +131,6 @@ public class ListClasses {
 		logOut(" -u    Show serialVersionUID for each class");
 		logOut(" -v    Show program version information");
 		logOut(" -h    Show help page");
-		return;
 		
 	}
 	
