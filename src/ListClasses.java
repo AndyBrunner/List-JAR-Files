@@ -28,7 +28,7 @@ public class ListClasses {
 
 	// Constants
 	static final String PROGRAM_NAME			= "ListClasses";
-	static final String PROGRAM_VERSION			= "2025.07.04";
+	static final String PROGRAM_VERSION			= "2025.07.05";
 	static final KTimer	START_TIME				= new KTimer();
 	static final int	MAX_CLASS_NAME_SIZE		= 70;
 
