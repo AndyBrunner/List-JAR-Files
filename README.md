@@ -115,6 +115,8 @@ Debug Example:
 
 The release includes a native macOS executable created with GraalVM. There is no need for any additional file to execute.
 
+Note: The option -u to show the serialVersionUID is not supported due to restrictions in support for the Java Reflection APIs.
+
 ```bash
 % ./listclasses ch.k43.util.jar 
 ch.k43.util.K                                                             45795 2025-06-05T16:56:20 ch.k43.util.jar

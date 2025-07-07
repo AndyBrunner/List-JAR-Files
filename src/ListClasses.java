@@ -28,7 +28,7 @@ public class ListClasses {
 
 	// Constants
 	static final String PROGRAM_NAME			= "ListClasses";
-	static final String PROGRAM_VERSION			= "2025.07.05";
+	static final String PROGRAM_VERSION			= "2025.07.07";
 	static final KTimer	START_TIME				= new KTimer();
 	static final int	MAX_CLASS_NAME_SIZE		= 70;
 
@@ -72,7 +72,7 @@ public class ListClasses {
         
         // Check file or directory exists
         if (!fileOrDirectory.exists()) {
-        	logError("File {} does not exist", fileOrDirectory.getName());
+        	logError("Error: File {} does not exist", fileOrDirectory.getName());
         }
 
         // Check if passed name is a file and has JAR extension
@@ -102,15 +102,15 @@ public class ListClasses {
 	
 	/**
 	 * Checks if application is running as GraalVM native executable.
+	 * 
+	 * @returns True of running under GraalVM, else otherwise
 	 */
-	static void checkRunningUnderGraalVM() {
+	static boolean checkRunningUnderGraalVM() {
 
         String vmName		= System.getProperty("java.vm.name", "");
         String runtimeName	= System.getProperty("java.runtime.name", "");
 
-        if (vmName.contains("GraalVM") || runtimeName.contains("GraalVM")) {
-        	logError("Option -u not supported for GraalVM native executable due to restrictions in support for the Java Reflection API");
-        }
+        return (vmName.contains("GraalVM") || runtimeName.contains("GraalVM"));
 	}
 
 	/**
@@ -354,9 +354,16 @@ public class ListClasses {
 				}
 			}
 		}
-
+		
 		//
-		// Process -h command
+		// Check if running as GraalVM native executable
+		//
+		if (argSerialVersionUID && checkRunningUnderGraalVM()) {
+        	logError("Error: Option -u not supported for GraalVM native executable due to restrictions in support for the Java Reflection API");
+		}
+		
+		//
+		// Process -h option
 		//
 		if (argHelp) {
 			displayHelp();
@@ -364,17 +371,12 @@ public class ListClasses {
 		}
 		
 		//
-		// Process -v command
+		// Process -v option
 		//
 		if (argVersion) {
 			logOut("{} Version {}", PROGRAM_NAME, PROGRAM_VERSION);
 			return;
 		}
-		
-		//
-		// Check if running as GraalVM native executable
-		//
-		checkRunningUnderGraalVM();
 		
 		// Check if any JAR file to be processed
 		if (argJARFiles.isEmpty()) {
@@ -467,6 +469,7 @@ public class ListClasses {
 	                    // Add it to array
 	                    classFiles.add(outputLine.toString());
 	                    jarFileCount++;
+	                    
 	                } else {
 	                	KLog.debug("Skipping JAR entry {}", entry.getName());
 	                }
@@ -489,7 +492,8 @@ public class ListClasses {
 			classFiles = getDuplicates(classFiles);
 
 			if (classFiles.isEmpty()) {
-	            logError("No duplicate Java class names found");
+	            logOut("No duplicate Java class names found");
+	            return;
 			} else {
 	            KLog.debug("{} duplicate Java class names found", classFiles.size());
 			}
