@@ -28,7 +28,7 @@ public class ListClasses {
 
 	// Constants
 	static final String PROGRAM_NAME			= "ListClasses";
-	static final String PROGRAM_VERSION			= "2025.07.07";
+	static final String PROGRAM_VERSION			= "2025.07.08";
 	static final KTimer	START_TIME				= new KTimer();
 	static final int	MAX_CLASS_NAME_SIZE		= 70;
 
@@ -286,6 +286,7 @@ public class ListClasses {
 				arg = "-f";
 			}
 			
+			// Check arguments
 			switch (arg) {
 				case "-h": {
 					if (argHelp) {

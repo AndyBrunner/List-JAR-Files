@@ -113,12 +113,12 @@ Debug Example:
 
 ## macOS Native Executable
 
-The release includes a native macOS executable created with GraalVM. There is no need for any additional file to execute.
+Each release includes a native macOS ARM64 binary executable created with GraalVM. There is no need for any additional file to execute. For easy access, place the executable in /usr/local/bin. 
 
 Note: The option -u to show the serialVersionUID is not supported due to restrictions in support for the Java Reflection APIs.
 
 ```bash
-% ./listclasses ch.k43.util.jar 
+% listclasses ch.k43.util.jar 
 ch.k43.util.K                                                             45795 2025-06-05T16:56:20 ch.k43.util.jar
 ch.k43.util.KDB                                                           19731 2025-06-05T16:56:20 ch.k43.util.jar
 ch.k43.util.KFile                                                          7334 2025-06-05T14:14:44 ch.k43.util.jar
