@@ -26,7 +26,7 @@ A simple command-line tool to list (or find duplicate) Java class names in JAR f
 ```
 ListClasses [-c] [-d] [-s] [-a] [-fxxx] [-u] [-h] [-v] [file...]
 
-file  One or more JAR files or directories
+file  JAR file or directory
 -c    Include JAR files found in the current Java classpath
 -d    List only duplicate class names
 -s    Sort output by the Java class name
@@ -115,7 +115,7 @@ Debug Example:
 
 Each release includes a native macOS ARM64 binary executable created with GraalVM. There is no need for any additional file to execute. For easy access, place the executable in /usr/local/bin. 
 
-Note: The option -u to show the serialVersionUID is not supported due to restrictions in support for the Java Reflection APIs.
+Note: The option -u to show the serialVersionUID is not supported due to restrictions in support for the Java Reflection APIs in GraalVM.
 
 ```bash
 % listclasses ch.k43.util.jar 

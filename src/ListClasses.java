@@ -287,7 +287,7 @@ public class ListClasses {
 			}
 			
 			// Check arguments
-			switch (arg) {
+			switch (arg.trim()) {
 				case "-h": {
 					if (argHelp) {
 						logError("Error: Multiple -h options specified");
